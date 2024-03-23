@@ -8,19 +8,41 @@ using System.Threading.Tasks;
 
 namespace ComputerClient
 {
-    internal class ChannelFactorySample : CalculatorLibrary.IFileCallBackService
+    internal class ChannelFactorySample :  CalculatorLibrary.IFileCallBackService
     {
+    	ChannelFactory<CalculatorLibrary.ICalculatorService> factory = null;
+    	ICalculatorService channel = null;
+    	
+    	public ChannelFactorySample()
+    	{
+    		factory = new ChannelFactory<CalculatorLibrary.ICalculatorService>(
+	              new WSHttpBinding(), new EndpointAddress("http://localhost:8082/ComService"));
+    	}
+    	
         public void Process()
         {
             /* Channel Factory */
-            ChannelFactory<CalculatorLibrary.ICalculatorService> factory = new ChannelFactory<CalculatorLibrary.ICalculatorService>(
-              new WSHttpBinding(), new EndpointAddress("http://localhost:8082/ComService"));
-
-            var channel = factory.CreateChannel();
-
-            var result = channel.Add(new CalculatorLibrary.CalRequest { A = 20, B = 2, Key = "sssddd" });
-
-            Console.WriteLine(result.Result);
+			
+            try {
+	
+	            channel = factory.CreateChannel();
+	            var result = channel.Add(new CalculatorLibrary.CalRequest { A = 20, B = 2, Key = "sssddd" });	
+	            Console.WriteLine(result.Result);
+            }
+            catch(System.ServiceModel.CommunicationException ex){
+            	            	            		
+            	if(factory.State == CommunicationState.Faulted){
+            		
+            		 factory = new ChannelFactory<CalculatorLibrary.ICalculatorService>(
+	              		new WSHttpBinding(), new EndpointAddress("http://localhost:8082/ComService"));
+            	}
+            	
+            } catch(Exception ex){
+            	
+            	 factory = new ChannelFactory<CalculatorLibrary.ICalculatorService>(
+	              new WSHttpBinding(), new EndpointAddress("http://localhost:8082/ComService"));
+            	
+            }
 
             try
             {  
